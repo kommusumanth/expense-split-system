@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SplitWise — Expense Splitter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+
+<aside class="sidebar">
+    <div class="logo">
+        <h1>Split<span>Wise</span></h1>
+        <p>Expense Manager</p>
+    </div>
+    <nav>
+        <div class="nav-label">Overview</div>
+        <button class="nav-item active" onclick="showSection('dashboard')">
+            <span class="nav-icon">🏠</span> Dashboard
+        </button>
+
+        <div class="nav-label">Core</div>
+        <button class="nav-item" onclick="showSection('users')">
+            <span class="nav-icon">👤</span> Users
+        </button>
+        <button class="nav-item" onclick="showSection('groups')">
+            <span class="nav-icon">👥</span> Groups
+        </button>
+        <button class="nav-item" onclick="showSection('expenses')">
+            <span class="nav-icon">💸</span> Expenses
+        </button>
+        <button class="nav-item" onclick="showSection('transactions')">
+            <span class="nav-icon">🔄</span> Transactions
+        </button>
+
+        <div class="nav-label">Tools</div>
+        <button class="nav-item" onclick="showSection('balance')">
+            <span class="nav-icon">⚖️</span> Balance Check
+        </button>
+        <button class="nav-item" onclick="showSection('settlement')">
+            <span class="nav-icon">🧮</span> Net Settlement
+        </button>
+        <button class="nav-item" onclick="showSection('friends')">
+            <span class="nav-icon">🤝</span> Add Friends
+        </button>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="api-status">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Checking API...</span>
+        </div>
+    </div>
+</aside>
+
+<main class="main">
+
+    <!-- Sticky Top Bar -->
+    <div class="topbar">
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="api-connected-bar">
+            <div class="api-connected-dot" id="topbar-status-dot"></div>
+            <span class="api-connected-label" id="topbar-status-text">Checking...</span>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- ════ SECTION: DASHBOARD ════ -->
+        <div class="section active" id="section-dashboard">
+            <div class="overview-header">
+                <h2>Welcome back 👋</h2>
+                <p>Manage your group expenses and settle up with friends.</p>
+            </div>
+
+            <!-- Quick Action Cards -->
+            <div class="quick-actions">
+                <a class="quick-action" onclick="showSection('users')">
+                    <span class="qa-icon">👤</span>
+                    <div><div class="qa-label">Create User</div><div class="qa-sub">Add a new member</div></div>
+                </a>
+                <a class="quick-action" onclick="showSection('groups')">
+                    <span class="qa-icon">👥</span>
+                    <div><div class="qa-label">New Group</div><div class="qa-sub">Start splitting</div></div>
+                </a>
+                <a class="quick-action" onclick="showSection('expenses')">
+                    <span class="qa-icon">💸</span>
+                    <div><div class="qa-label">Add Expense</div><div class="qa-sub">Log a payment</div></div>
+                </a>
+                <a class="quick-action" onclick="showSection('settlement')">
+                    <span class="qa-icon">🧮</span>
+                    <div><div class="qa-label">Net Settlement</div><div class="qa-sub">Auto-cancel debts</div></div>
+                </a>
+            </div>
+
+            <!-- Two-column grid: Users table + API reference -->
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-green">👤</span> All Users</div>
+                    <div id="dashboard-users">
+                        <div class="empty-state"><div class="empty-icon">🔄</div><p>Loading users...</p></div>
+                    </div>
+                    <button class="btn btn-ghost" style="margin-top:12px;width:100%;" onclick="loadDashboardUsers()">↻ Refresh</button>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-blue">💡</span> API Endpoints</div>
+                    <table>
+                        <thead><tr><th>Method</th><th>Endpoint</th></tr></thead>
+                        <tbody>
+                            <tr><td><span class="badge badge-green">POST</span></td><td>/users</td></tr>
+                            <tr><td><span class="badge badge-blue">GET</span></td><td>/users/{id}/balance</td></tr>
+                            <tr><td><span class="badge badge-purple">POST</span></td><td>/users/net-settle</td></tr>
+                            <tr><td><span class="badge badge-green">POST</span></td><td>/groups</td></tr>
+                            <tr><td><span class="badge badge-green">POST</span></td><td>/groups/{id}/add-user/{uid}</td></tr>
+                            <tr><td><span class="badge badge-green">POST</span></td><td>/expenses/add</td></tr>
+                            <tr><td><span class="badge badge-green">POST</span></td><td>/transactions/settle</td></tr>
+                            <tr><td><span class="badge badge-blue">GET</span></td><td>/transactions/user/{id}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION: USERS ════ -->
+        <div class="section" id="section-users">
+            <p class="section-desc">Create and manage users. Each user has a name and a unique email address.</p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-green">✨</span> Create User</div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="user-name" placeholder="e.g. Priya Sharma">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="user-email" placeholder="e.g. priya@example.com">
+                    </div>
+                    <button class="btn btn-primary" onclick="createUser()"><span>＋</span> Create User</button>
+                    <div class="response-box empty" id="user-create-res">Response will appear here...</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-blue">🔍</span> Fetch User by ID</div>
+                    <div class="form-group">
+                        <label>User ID</label>
+                        <input type="number" id="get-user-id" placeholder="e.g. 1">
+                    </div>
+                    <button class="btn btn-blue" onclick="getUser()">Fetch User</button>
+                    <div class="response-box empty" id="get-user-res">Response will appear here...</div>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-title"><span class="icon icon-amber">📋</span> All Users</div>
+                    <div id="all-users-list">
+                        <div class="empty-state"><p>Click "Load All Users" to see the list.</p></div>
+                    </div>
+                    <button class="btn btn-ghost" style="margin-top:16px;" onclick="getAllUsers()">Load All Users</button>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-title"><span class="icon icon-red">🗑️</span> Delete User</div>
+                    <div style="display:flex;gap:12px;align-items:flex-end;">
+                        <div class="form-group" style="flex:1;margin:0;">
+                            <label>User ID to Delete</label>
+                            <input type="number" id="delete-user-id" placeholder="e.g. 3">
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteUser()">Delete User</button>
+                    </div>
+                    <div class="response-box empty" id="delete-user-res">Response will appear here...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION: GROUPS ════ -->
+        <div class="section" id="section-groups">
+            <p class="section-desc">Create groups and add members to start splitting expenses together.</p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-green">✨</span> Create Group</div>
+                    <div class="form-group">
+                        <label>Group Name</label>
+                        <input type="text" id="group-name" placeholder="e.g. Goa Trip 2025">
+                    </div>
+                    <button class="btn btn-primary" onclick="createGroup()"><span>＋</span> Create Group</button>
+                    <div class="response-box empty" id="group-create-res">Response will appear here...</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-blue">🔍</span> Fetch Group</div>
+                    <div class="form-group">
+                        <label>Group ID</label>
+                        <input type="number" id="get-group-id" placeholder="e.g. 1">
+                    </div>
+                    <button class="btn btn-blue" onclick="getGroup()">Fetch Group</button>
+                    <div class="response-box empty" id="get-group-res">Response will appear here...</div>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-title"><span class="icon icon-amber">➕</span> Add User to Group</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Group ID</label>
+                            <input type="number" id="add-user-group-id" placeholder="e.g. 1">
+                        </div>
+                        <div class="form-group">
+                            <label>User ID</label>
+                            <input type="number" id="add-user-to-group-user-id" placeholder="e.g. 2">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addUserToGroup()">Add to Group</button>
+                    <div class="response-box empty" id="add-group-user-res">Response will appear here...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION: EXPENSES ════ -->
+        <div class="section" id="section-expenses">
+            <p class="section-desc">Add an expense to a group. The amount is automatically split equally among all group members.</p>
+            <div class="grid-2">
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-title"><span class="icon icon-green">💸</span> Add Expense</div>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>Paid By (User ID)</label>
+                            <input type="number" id="expense-paidby" placeholder="e.g. 1">
+                        </div>
+                        <div class="form-group">
+                            <label>Group ID</label>
+                            <input type="number" id="expense-group" placeholder="e.g. 1">
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (₹)</label>
+                            <input type="number" id="expense-amount" placeholder="e.g. 2400" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="expense-desc" placeholder="e.g. Dinner at Barbeque Nation">
+                    </div>
+                    <button class="btn btn-primary" onclick="addExpense()"><span>＋</span> Add & Split Expense</button>
+                    <div class="response-box empty" id="expense-res">Response will appear here...</div>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-title"><span class="icon icon-blue">ℹ️</span> How Auto-Split Works</div>
+                    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:200px;font-size:13px;color:var(--text3);line-height:1.8;">
+                            When you add an expense, the backend automatically divides the total amount equally among all members of the group. Each member's share is tracked as a <strong style="color:var(--text2)">Split</strong> record with status <span class="badge badge-amber">UNPAID</span>.
+                        </div>
+                        <div style="flex:1;min-width:200px;font-size:13px;color:var(--text3);line-height:1.8;">
+                            The person who paid is excluded from owing themselves. Others can settle their splits via the <strong style="color:var(--text2)">Transactions → Settle</strong> flow using the split ID returned in the expense response.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION: TRANSACTIONS ════ -->
+        <div class="section" id="section-transactions">
+            <p class="section-desc">Settle outstanding split payments and view transaction history for any user.</p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-green">✅</span> Settle a Payment</div>
+                    <div class="form-group">
+                        <label>Split ID</label>
+                        <input type="number" id="settle-split-id" placeholder="e.g. 5">
+                    </div>
+                    <div class="form-group">
+                        <label>Paid By (User ID)</label>
+                        <input type="number" id="settle-user-id" placeholder="e.g. 2">
+                    </div>
+                    <button class="btn btn-primary" onclick="settlePayment()">✓ Mark as Settled</button>
+                    <div class="response-box empty" id="settle-res">Response will appear here...</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-blue">📜</span> User Transaction History</div>
+                    <div class="form-group">
+                        <label>User ID</label>
+                        <input type="number" id="tx-user-id" placeholder="e.g. 1">
+                    </div>
+                    <button class="btn btn-blue" onclick="getUserTransactions()">Load Transactions</button>
+                    <div id="tx-list" style="margin-top:16px;">
+                        <div class="empty-state"><p>Enter a user ID and fetch.</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION: BALANCE ════ -->
+        <div class="section" id="section-balance">
+            <p class="section-desc">Check the complete balance summary for any user — what they owe and what they're owed.</p>
+            <div class="card" style="max-width:520px;">
+                <div class="card-title"><span class="icon icon-amber">⚖️</span> Check Balance</div>
+                <div class="form-group">
+                    <label>User ID</label>
+                    <input type="number" id="balance-user-id" placeholder="e.g. 1">
+                </div>
+                <button class="btn btn-primary" onclick="getBalance()">Check Balance</button>
+            </div>
+
+            <div id="balance-result" style="display:none;">
+                <div class="grid-3" style="margin-top:0;">
+                    <div class="stat-card">
+                        <div class="stat-label">You Owe</div>
+                        <div class="stat-value negative" id="bal-owe">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">You're Owed</div>
+                        <div class="stat-value positive" id="bal-owed">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Net Balance</div>
+                        <div class="stat-value neutral" id="bal-net">—</div>
+                    </div>
+                </div>
+                <div class="card" style="margin-top:20px;">
+                    <div class="card-title"><span class="icon icon-blue">📊</span> Breakdown</div>
+                    <div id="balance-breakdown"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION: NET SETTLEMENT ════ -->
+        <div class="section" id="section-settlement">
+            <p class="section-desc">Automatically cancel overlapping debts between two users. If A owes B ₹20 and B owes A ₹10 — clicking Calculate will mark B's ₹10 as PAID and reduce A's split to ₹10 in the database.</p>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-purple">🧮</span> Calculate Net Settlement</div>
+                    <div class="form-group">
+                        <label>User A — ID</label>
+                        <input type="number" id="settle-user-a" placeholder="e.g. 1">
+                    </div>
+                    <div class="form-group">
+                        <label>User B — ID</label>
+                        <input type="number" id="settle-user-b" placeholder="e.g. 2">
+                    </div>
+                    <button class="btn btn-purple" onclick="getNetSettlement()" style="width:100%;">
+                        🧮 Calculate &amp; Auto-Cancel
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Result card — hidden until API responds -->
+            <div id="settlement-result" style="display:none;">
+                <div class="net-result-card" id="net-result-card">
+                    <div class="net-direction" id="net-direction">—</div>
+                    <div class="net-amount-big" id="net-amount-big">—</div>
+                    <div class="net-sublabel">net amount after auto-cancellation</div>
+
+                    <button class="details-toggle-btn" onclick="toggleGrossDetails()" id="gross-toggle-btn">
+                        ▸ Show gross breakdown
+                    </button>
+
+                    <div class="gross-details" id="gross-details">
+                        <div class="gross-row owe">
+                            <span class="gr-label" id="gross-owe-label">—</span>
+                            <span class="gr-amount" id="gross-owe-amount">—</span>
+                        </div>
+                        <div class="net-arrow">↕</div>
+                        <div class="gross-row owed">
+                            <span class="gr-label" id="gross-owed-label">—</span>
+                            <span class="gr-amount" id="gross-owed-amount">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><span class="icon icon-blue">📋</span> Raw API Response</div>
+                    <div class="response-box" id="settlement-raw-res"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION: FRIENDS ════ -->
+        <div class="section" id="section-friends">
+            <p class="section-desc">Connect users as friends so they can easily split expenses together outside of groups.</p>
+            <div class="card" style="max-width:500px;">
+                <div class="card-title"><span class="icon icon-green">🤝</span> Add Friend</div>
+                <div class="form-group">
+                    <label>User ID</label>
+                    <input type="number" id="friend-user-id" placeholder="e.g. 1">
+                </div>
+                <div class="form-group">
+                    <label>Friend's User ID</label>
+                    <input type="number" id="friend-friend-id" placeholder="e.g. 2">
+                </div>
+                <button class="btn btn-primary" onclick="addFriend()">🤝 Add Friend</button>
+                <div class="response-box empty" id="friend-res">Response will appear here...</div>
+            </div>
+        </div>
+
+    </div><!-- end .content -->
+</main>
+
+<div id="toast-container"></div>
+
+<script src="app.js">/* app.js */
+
+</script>
+</body>
+</html>
